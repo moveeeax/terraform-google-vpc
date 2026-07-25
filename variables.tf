@@ -4,8 +4,13 @@ variable "project_id" {
 }
 
 variable "name" {
-  description = "Name of the VPC network."
+  description = "Name of the VPC network. Must be a valid RFC1035 resource name."
   type        = string
+
+  validation {
+    condition     = can(regex("^[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?$", var.name))
+    error_message = "name must be 1-63 characters and comply with RFC1035: start with a lowercase letter, contain only lowercase letters, digits and dashes, and not end with a dash."
+  }
 }
 
 variable "routing_mode" {
@@ -20,7 +25,12 @@ variable "routing_mode" {
 }
 
 variable "auto_create_subnetworks" {
-  description = "Whether to create a subnetwork in every region automatically. Set false for custom-mode networks."
+  description = <<-EOT
+    Whether to create a subnetwork in every region automatically ("auto subnet mode").
+    Keep this false. Auto mode carves 10.128.0.0/9 across every current and future GCP
+    region, which routinely collides with on-premises or peered ranges and cannot be
+    reverted without recreating the network. Manage subnets explicitly instead.
+  EOT
   type        = bool
   default     = false
 }
@@ -34,10 +44,22 @@ variable "mtu" {
     condition     = var.mtu >= 1300 && var.mtu <= 8896
     error_message = "mtu must be between 1300 and 8896."
   }
+
+  validation {
+    condition     = var.mtu == floor(var.mtu)
+    error_message = "mtu must be a whole number of bytes."
+  }
 }
 
 variable "delete_default_routes_on_create" {
-  description = "Whether to delete the default routes (0.0.0.0/0) to the internet when the network is created."
+  description = <<-EOT
+    Whether to delete the default 0.0.0.0/0 routes to the internet gateway immediately
+    after the network is created. This applies at creation time only -- toggling it on an
+    existing network does not add or remove routes. Enabling it leaves the network with no
+    internet egress and no route to Google APIs until you supply your own (for example a
+    route to the Private Google Access VIP), so only set it true when you manage egress
+    routing explicitly.
+  EOT
   type        = bool
   default     = false
 }
