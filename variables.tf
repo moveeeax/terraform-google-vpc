@@ -69,3 +69,14 @@ variable "description" {
   type        = string
   default     = null
 }
+
+variable "shared_vpc_host" {
+  description = <<-EOT
+    Whether to enable var.project_id as a Shared VPC host project. Hosting is a property
+    of the whole project, not of this network: every network in the project becomes
+    shareable, and service projects must be detached before it can be disabled. Leave
+    false if another configuration already manages the host project.
+  EOT
+  type        = bool
+  default     = false
+}

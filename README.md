@@ -20,6 +20,27 @@ module "vpc" {
 
 A runnable example lives in [`examples/basic`](examples/basic).
 
+### Shared VPC host
+
+Set `shared_vpc_host = true` to enable `project_id` as a Shared VPC host project
+(`google_compute_shared_vpc_host_project`). The `shared_vpc_host` output returns the host
+project ID, so service-project attachments can depend on it.
+
+```hcl
+module "vpc" {
+  source = "github.com/moveeeax/terraform-google-vpc?ref=v1.0.0"
+
+  project_id      = var.host_project_id
+  name            = "shared-vpc"
+  shared_vpc_host = true
+}
+```
+
+Hosting is a project-level setting: every network in the project becomes shareable, not
+only this one. Service projects must be detached before the host flag can be removed. If
+another configuration already enables the host project, leave this `false` so the two do
+not fight over the same setting.
+
 ## Scope
 
 This module manages the network object only. Subnets — and therefore VPC flow logs,
@@ -61,6 +82,7 @@ explicitly.
 | `mtu`                             | Maximum transmission unit in bytes, between 1300 and 8896.          | `number` | `1460`       |    no    |
 | `delete_default_routes_on_create` | Delete the default 0.0.0.0/0 routes at creation time only.          | `bool`   | `false`      |    no    |
 | `description`                     | Optional description for the VPC network.                           | `string` | `null`       |    no    |
+| `shared_vpc_host`                 | Enable `project_id` as a Shared VPC host project.                    | `bool`   | `false`      |    no    |
 
 ## Outputs
 
@@ -70,6 +92,7 @@ explicitly.
 | `self_link`    | URI of the VPC network.                                 |
 | `name`         | Name of the VPC network.                                |
 | `gateway_ipv4` | IPv4 address of the gateway of the default route.       |
+| `shared_vpc_host` | Host project ID when `shared_vpc_host` is true, otherwise `null`. |
 
 ## Development
 
